@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Book;
 
 use Illuminate\Http\Request;
 
@@ -18,7 +19,8 @@ class BookController extends Controller
     public function index()
     {
         //
-        return "Menampilkan semua buku";
+        $books = Book::all();
+        return view('books.index', compact('books'));
     }
 
     /**
@@ -27,7 +29,7 @@ class BookController extends Controller
     public function create()
     {
         //
-        return "Frm tambah buku";
+        return view('books.create');
     }
 
     /**
@@ -36,7 +38,27 @@ class BookController extends Controller
     public function store(Request $request)
     {
         //
-        return "Menyimpan buku baru";
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'harga' => 'required|integer',
+            'stok' => 'required|integer'
+        ]);
+
+        Book::create($validated);
+
+        return redirect()->route('books.index')
+            ->with('success', 'Buku berhasil ditambahkan!');
+    }
+
+    public function storeMass()
+    {
+        Book::create([
+            'nama' => 'Laptop',
+            'harga' => 15000000,
+            'stok' => 10
+        ]);
+
+        return "Data berhasil disimpan dengan mass assignment!";
     }
 
     /**
@@ -54,7 +76,8 @@ class BookController extends Controller
     public function edit(string $id)
     {
         //
-        return "Form edit buku dengan ID: " . $id;
+       $book = Book::find($id);
+       return view('books.edit', compact('book'));
     }
 
     /**
@@ -63,15 +86,40 @@ class BookController extends Controller
     public function update(Request $request, string $id)
     {
         //
-        return "Mengupdate buku dengan ID: " . $id;
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'harga' => 'required|integer',
+            'stok' => 'required|integer'
+        ]);
+
+        Book::where('id', $id)->update($validated);
+
+        return redirect()->route('books.index')
+            ->with('success', 'Buku berhasil diupdate!');
     }
 
+    public function updateMass($id)
+    {
+        Book::where('id', $id)->update(['harga' => 16000000]);
+
+        return "Harga buku berhasil diupdate dengan mass update!";
+    }
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
         //
-        return "Menghapus buku dengan ID: ". $id;
+        Book::destroy($id);
+        return redirect()->route('books.index')
+            ->with('success', 'Buku berhasil dihapus!');
+    }
+
+    public function getData()
+    {
+        $book = Book::all(); // Mengambil semua data
+        $book = Book::find(1); // Mengambil data dengan ID 1
+        $book = Book::where('harga', '>', 1000000)->get();
+        // Mengambil book dengan harga > 1 juta
     }
 }
